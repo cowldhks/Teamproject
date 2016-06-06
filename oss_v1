@@ -1,0 +1,775 @@
+#include<iostream>
+#include<conio.h>
+#include<stdio.h>
+#include<fstream>
+#include<string.h>
+#include<process.h>
+#include<ctype.h>
+#include<dos.h>
+#include <windows.h>
+#include "graphics.h"
+
+using namespace std;
+
+int choice;
+void graph(void);
+//코드수정
+int meal = 0;
+int ballett = 0;
+int Car_No = 0;
+
+
+struct date
+{
+	int da_day;
+	int da_mon;
+	int da_year;
+};	
+
+
+void delay(int x)
+{
+	Sleep (x); 
+};
+
+
+void gotoxy(int x, int y)
+{
+	COORD Cur;
+	Cur.X=x;
+	Cur.Y=y;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE),Cur);
+
+
+};
+
+void textcolor(int color_number)
+{
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE),color_number);
+}
+
+
+
+void getdate(date *d)
+{
+   scanf("%d %d %d", d->da_day, d->da_mon, d->da_year);
+}
+
+void basic()
+{
+	int gd=DETECT,gm;
+	initgraph(&gd,&gm,"");
+	setcolor(4);
+	rectangle(0,0,636,476);
+	rectangle(2,2,634,474);
+	line(247,52,384,52);
+	line(247,50,384,50);
+	setbkcolor(1);
+
+}
+
+
+void graph()
+{
+	int gd=DETECT,gm;
+	initgraph(&gd,&gm,"");
+	setcolor(4);
+	rectangle(0,0,636,476);
+	rectangle(2,2,634,474);
+	line(247,52,384,52);
+	line(247,50,384,50);
+	setbkcolor(0);
+	setcolor(10);
+	line(172,345,400,345);
+
+}
+
+class ROOMS
+{
+public:
+	int roomNo;
+	int roomType;
+	int roomStatus;
+	int roomCharges;
+	//소스코드수정
+	int grade;							//객실평가에 대한 변수
+	void Database();
+	void status();
+	int findRoomNo(int TYPE);
+	void bookRoom(int roomNo);
+	unsigned long retRoomCharges(int roomNo);
+	void releaseRoom(int roomNo);
+}r;										//ROOMS r
+
+class CUSTOMER
+{
+public:
+	int Roomn;
+	char name[30];
+	char add[30];
+	char phone[20];
+	int daysStayed;
+	int DAY,MONTH,YEAR;
+	long amount;
+	void searchRoomNo();
+	void searchCust();
+	void check_in();
+	void check_out();
+	void reports();
+	void previous_Customer();
+};
+int DAY, MONTH, YEAR;
+
+
+
+void ROOMS::Database()
+{
+	fstream fin("rooms", ios::binary | ios::in);
+	fin.close();
+	for (int i=1;i<=200;i++)
+	{
+		if(i<100)
+		{
+			r.roomNo=i;
+			r.roomStatus = 0 ;
+			r.roomCharges = 300;
+			r.roomType= 0 ;
+			fstream fout("rooms", ios::binary | ios:: app);
+			fout.write((char*)&r, sizeof(r));
+			fout.close();
+		}
+		else if(i>=101 && i<=150)
+		{
+			r.roomNo = i;
+			r.roomStatus = 0 ;
+			r.roomCharges = 500;
+			r.roomType= 1 ;
+			fstream fout("rooms", ios::binary | ios:: app);
+			fout.write((char*)&r, sizeof(r));
+			fout.close();
+		}
+		else if(i>150 && i<=200)
+		{
+			r.roomNo = i;
+			r.roomStatus = 0 ;
+			r.roomCharges = 1000;
+			r.roomType= 2 ;
+			fstream fout("rooms", ios::binary | ios:: app);
+			fout.write((char*)&r, sizeof(r));
+			fout.close();
+		}
+	}
+}
+void CUSTOMER::searchCust()
+{
+	system("cls");
+	basic();
+	struct date d;
+	getdate(&d); 
+	DAY=	d.da_day;
+	MONTH=	d.da_mon;
+	YEAR=	d.da_year;
+	int flag=0;
+	char NAME[20];
+	gotoxy(32,3); cout<<"H I L L   V I E W";
+	gotoxy(26,5); cout<<"C U S T O M E R    D E T A I L";
+	gotoxy (5,15);cout<<"Enter Customer's Name : ";
+	gets(NAME);
+	CUSTOMER c;
+	fstream fin("cust", ios::binary | ios::in);
+	while(fin.read((char*)&c, sizeof(c)))
+	{
+		if(strcmp(NAME, c.name)==0)
+		{
+			flag=1;
+			gotoxy (40,15);cout<<"Room Number: "<<c.Roomn;
+			gotoxy (40,16);cout<<"Customer Name : "<<c.name;
+			gotoxy (40,17);cout<<"Address: "<<c.add;
+			gotoxy (40,18);cout<<"Phone No. : "<<c.phone;
+			gotoxy (40,19);cout<<"Check-in : "<<c.DAY<<"/"<<c.MONTH<<"/"<<c.YEAR;
+			break;
+		}
+	}
+	fin.close();
+	if(flag==0)
+	{
+		gotoxy(40,15);	cout<<"No such Name Found !!!";
+	}
+	_getch();
+	closegraph();
+	restorecrtmode();
+}
+
+int ROOMS::findRoomNo(int TYPE)
+{
+	ROOMS r;
+	int RNO, flag=0;
+	fstream fin("rooms", ios::binary | ios::in);
+	while(fin.read((char*)&r, sizeof(r)))
+	{
+		if(TYPE==r.roomType)
+		{
+			if(r.roomStatus==0)
+			{
+				RNO=r.roomNo;
+				flag=1;
+				break;
+			}
+			else
+				flag=2;
+		}
+	}
+	fin.close();
+	if(flag==0)
+		return 0;				//findRoomNo가 0을 반환한다면 방을 찾을 수 없다.
+	else if(flag==1)
+		return RNO;				//findRoomNo가 룸넘버를 반환한다면 방을 사용할 수 있다.
+	else if(flag==2)
+		return -1;				//findRoomNo가 -1이라면 누군가 방을 예약중이다
+	return 0;
+}
+
+
+void CUSTOMER::searchRoomNo()															//방번호로 방을 검색해주는 함수
+{
+	system("cls");																		//화면 지우기
+	basic();																			//기본사각형을그린다
+	struct date d;																		//날짜에대한 구조체
+	getdate(&d);							
+	DAY=	d.da_day;
+	MONTH=	d.da_mon;
+	YEAR=	d.da_year;																	//날짜,달,연도를 받아온다
+	int roomno, flag=0;																	//방번호에 대한 roomno변수, 방을 예약했는지 안했는지를 확인할 flag변수를 선언
+	gotoxy(32,3); cout<<"H I L L  V I E W ";
+	gotoxy(26,5);cout<<"C U S T O M E R   D E T A I L ";
+	gotoxy(5,15);cout<<"Enter Room Number : ";
+	cin>>roomno;																		//찾고자하는 방번호를 입력받아 roomno변수에 입력해준다.
+	CUSTOMER c;
+	fstream fin("cust", ios::binary | ios::in);											//fin파일을 이진 입력형태로 열겠다.(읽어오겠다.)
+	while(fin.read((char *) &c, sizeof(c)))												//파일의 끝까지 모든 레코드를 읽겠다.
+	{
+		if(roomno==c.Roomn)																//만약 찾고자 하는 방이 파일안에 있다면
+		{
+			flag=1;																		//방이 있다면 flag = 1로 바꿔준다.
+			gotoxy (40,15);cout<<"Room Number: "<<c.Roomn;
+			gotoxy (40,16);cout<<"Customer Name : "<<c.name;
+			gotoxy (40,17);cout<<"Address: "<<c.add;
+			gotoxy (40,18);cout<<"Phone No. : "<<c.phone;
+			gotoxy (40,19);cout<<"Check-in : "<<c.DAY<<"."<<c.MONTH<<"."<<c.YEAR;		//기타 방에 대한 정보를 출력해준다.(예약한 고객의 이름, 주소, 전화번호, 체크인날짜)
+			break;
+		}
+	}
+	fin.close();																		//fin파일 실행 종료
+	if(flag==0)																			//flag = 0이라는것은 찾는 방이 없다는 얘기
+	{
+		gotoxy(40, 15);
+		cout<<"No such Room No. Found !!!";												//방을 찾을 수 없다고 출력
+	}
+	_getch();																			//출력뒤에 화면이 바로 넘어가면 안되게 때문에 값을 입력받을때까지 기다리도록 한다.
+	closegraph();																		//그래픽모드를 닫고 텍스트모드로 집입하겠다.
+	restorecrtmode();																	//graph에서 설정했던 값들로 화면 모드를 복구한다.
+}
+
+
+void CUSTOMER::reports()																//방을 사용한 가격에 대한 함수
+{
+	system("cls");																		//화면을 지운다.
+	basic();																			//기본 화면의값
+	CUSTOMER c;																			//고객에 대한 구조체 c
+	gotoxy(32,3); cout<<"H I L L   V I E W";	
+	gotoxy(21, 5);	cout<<"C U S T O M E R  S T A Y    S U M M A R Y";
+	int i=11;																			
+	unsigned  long AMOUNT=0;															//가격
+	fstream fin("detail", ios::binary | ios::in);										//fin
+	gotoxy(7,9);																		
+	cout<<"R.No NAME\t ADDRESS\t AMOUNT\t DT OF CHECK-IN\tDAYS STAYED";					
+	while(fin.read((char*)&c, sizeof(c)))												//파일의 끝까지 읽겠다.
+	{
+		gotoxy(7, i);	cout<<c.Roomn;													
+		gotoxy(12, i);	cout<<c.name;													
+		gotoxy(23, i);	cout<<c.add;													//고객의 방번호와 이름 주소 출력
+		gotoxy(37, i);																
+		if(c.amount==-1)
+			cout<<"N/A";																//해당사항없다.	
+		else
+		{
+			cout<<c.amount<<"/=";														
+			AMOUNT=AMOUNT+c.amount;														//호텔의 총소득
+		}
+		gotoxy(50, i);	cout<<c.DAY<<"/"<<c.MONTH<<"/"<<c.YEAR;
+		gotoxy(68, i);
+		if(c.daysStayed==-1)	
+			cout<<"N/A";																//해당사항없다.
+		else
+			cout<<c.daysStayed;
+		i++;
+		if(i==22)
+		{
+			i=11;
+			gotoxy(21, 5);	cout<<"C U S T O M E R   S T A Y    S U M M A R Y";
+			gotoxy(7,9);
+			cout<<"R.No NAMEADDRESS AMOUNT";
+			cout<<"DT/OF CHECK-INDAYS STAYED";
+			gotoxy(28,23);
+			cout<<"<Press any key to continue>";
+			_getch();
+		}
+	}
+	gotoxy(27, 25);
+	gotoxy(27, 25);	cout<<"< Net Amount Rs.: "<<AMOUNT<<"/= >";						//호텔의 총소득 출력
+	fin.close();
+	_getch();																		//출력뒤에 화면이 바로 넘어가면 안되게 때문에 값을 입력받을때까지 기다리도록 한다.
+	closegraph();																	//그래픽모드를 닫고 텍스트모드로 집입하겠다.
+	restorecrtmode();																//graph에서 설정했던 값들로 화면 모드를 복구한다.
+}
+void ROOMS::status()																//방 상태를 보여주는 함수
+{
+	system("cls");																	
+	ROOMS r;																		//방에 대한 구조체 r
+	gotoxy(8, 9);	cout<<"\tR O O M  S T A T U S";									
+	fstream fin("rooms", ios::binary | ios::in);									
+	gotoxy(5,19);cout<<"  R.No    Room Type  Room Charges   Status    Grade"<<"\n\n";
+	int maxPageSize = 25;															//최대 페이지 사이즈는 25
+	int initPageSize = 4;															//페이지 초기값은 4
+	for (int i=1;i<200;i++)															//방이 200개 이므로 int i=1부터 200
+	{
+		fin.read((char*)&r, sizeof(r));												
+		cout<<"\t"<<r.roomNo<<"\t";													
+
+		if(r.roomType==2)															//Deluxe 방의 룸타입은 2번이므로
+		{
+			cout<<"Deluxe  "<<"\t";
+		}
+		else if(r.roomType==1)														//semi-deluxe 방의 룸타입은 1번이다
+		{
+			cout<<"semi-deluxe"<<"\t";
+		}
+		else                                                                        //둘다 아닌방은 Ordinary이다.
+		{
+			cout<<"Ordinary"<<"\t";										
+		}
+		cout<<r.roomCharges<<"\t";													//방의 가격을 화면에 출력해준다.
+		cout<<r.grade<<"\t";														//방의 별점을 화면에 출력해준다.
+
+		if(r.roomStatus==1)															//roomStatus가 1이라는 얘기는 누군가 예약or사용중인 방이라는 얘기다
+			cout<<"Occupied"<<"\n";
+		else                                                                        //아무도 예약하지 않은 방이므로 --------를 출력
+			cout<<"--------"<<endl;
+
+		initPageSize++;																//한 화면에 다 못담을시 초기 페이지를 ++시킨다
+		if(initPageSize == maxPageSize) {                                           //만약 초기 페이지 사이즈와 최대 페이지의 수가 같아진다면 
+			initPageSize = 1;														//초기 페이지를 1로 다시 초기화 시킨다
+
+			_getch();																//입력을 기다린다.
+		}
+	}
+	fin.close();
+	_getch();																		//출력뒤에 화면이 바로 넘어가면 안되게 때문에 값을 입력받을때까지 기다리도록 한다.
+}
+
+void CUSTOMER::check_in()															//객실 예약에 대한 함수
+{
+	system("cls");
+	int TYPE, roomno, flag;															//TYPE은 방의 타입, roomno는 방의 넘버, flag는 방을 예약했는가 안했는가에 대한 함수이다.
+	char c;
+	struct date d;																	//날짜를 저장하는 구조체 d
+	getdate(&d); 
+	DAY=d.da_day;
+	MONTH=d.da_mon;
+	YEAR=d.da_year;																	//날짜, 달, 연도를 d에 받아준다.
+	ROOMS r;																		//방에 대한 정보를 저장하는 구조체 r
+	basic();
+	r.Database();																	
+	gotoxy(32,3); cout<<"H I L L  V I E W";
+	gotoxy(28,5);cout<<"C H E C K    I N";
+	gotoxy(10, 10);cout<<"<Enter:: '2' for Deluxe, '1' for Semi Deluxe and '0' for Ordinary>";
+	gotoxy(5,15);cout<<"Enter Room Type : ";
+	
+	do{
+		c=_getch();																	//
+		if(c>=48 && c<=50) {cout<<c;delay(2000);}									//
+	}while(c<48 || c>50);															//
+	
+	switch(c)
+	{  
+	case '0' : TYPE =0;break;
+	case '1' : TYPE =1;break;
+	case '2' : TYPE =2;break;
+	}																				//앞의 c가 입력받은 값은 방의 타입이므로!
+			
+	gotoxy(20, 24);
+	roomno=r.findRoomNo(TYPE);														//findRoomNo 함수 
+	gotoxy(20, 24);																	
+	if(roomno==-1)																	//roomno가 -1이라면 방을 예약할 수 없다는 뜻이다.			
+	{
+		cout<<"This Room Type is not available !!!";
+		_getch();
+		return;
+	}
+	else if(roomno==0)																//roomno가 0이라면 방을 찾을 수 없다는것
+	{
+		cout<<"Invalid room number !!!";
+		_getch();
+		return;
+	}
+	else                                                                           //방을 찾을 수 있고 예약할 수있다
+	{
+		CUSTOMER c;
+		static char NAME[30], ADD[30], PHONE[20];	
+		fstream fout("cust", ios::binary | ios::app);								// 출력하는 데이터가 파일의 제일 끝에 기록된다.
+		gotoxy(5,16);	cout<<"Enter the Name : ";
+		gets(NAME);
+		gotoxy(5, 17); cout<<"Enter Address: ";
+		gets(ADD);
+		gotoxy(5, 18);	cout<<"Enter Phone No. : ";
+		gets(PHONE);
+		gotoxy(5, 19); cout<<"Enter th Car No. : "; cin>>Car_No;
+
+		c.Roomn=roomno;
+		c.daysStayed=-1;
+		c.amount=-1;
+		strcpy(c.name, NAME);
+		strcpy(c.add, ADD);
+		strcpy(c.phone, PHONE);													//이름, 주소, 번호, 차번호를 입력받는다
+		c.DAY=DAY;
+		c.MONTH=MONTH;
+		c.YEAR=YEAR;
+		fout.write((char*)&c, sizeof(c));										//
+		fout.close();															//파일을 닫는다
+	}
+	r.bookRoom(roomno);															//
+	closegraph();
+	restorecrtmode();
+}
+
+void CUSTOMER::check_out()
+{
+	//수정코드
+	_getch();																	//3을 입력한뒤 화면이 바로 넘어가는것을 방지하기 위해									
+	system("cls");
+	basic();
+	int roomno, flag=0;
+	long double AMOUNT;
+	gotoxy(32,3); cout<<"H I L L   V I E W";
+	gotoxy(32,5);	cout<<"C H E C K  O U T";
+	gotoxy(23,14);	cout<<"Enter Room No. to Vacate : ";
+	cin>>roomno;
+	CUSTOMER c;
+	fstream fin("cust", ios::binary | ios::in);
+
+	while(fin.read((char*)&c, sizeof(c)))
+	{
+		if(roomno==c.Roomn)
+		{
+			flag=1;
+			break;
+		}
+	}
+	fin.close();
+	if(flag==0)
+	{
+		gotoxy(28, 17);
+		cout<<"The Room is Unoccupied !!!";
+		_getch();
+		return;
+	}
+	if(flag==1)
+	{
+		ROOMS r;
+		r.releaseRoom(roomno);
+		AMOUNT=r.retRoomCharges(roomno);
+	}
+	fstream fin1("cust", ios::binary | ios::in);
+	fstream fout1("temp", ios::binary | ios::out);
+	while(fin1.read((char*)&c, sizeof(c)))
+	{
+		if(roomno==c.Roomn && c.daysStayed==-1)
+		{
+			int D;
+			gotoxy(23,16);	cout<<"Enter No. of Days stayed : ";
+			cin>>D;
+			c.daysStayed=D;
+			//코드수정
+			c.amount=D*AMOUNT+meal;																				//총지불금액 = 머문날*객실금액+밥값
+			gotoxy(23,18);	cout<<"Total Charges are Rupees : "<<c.amount;										
+			gotoxy(18,20);  cout<<"발렛 서비스를 원하시나요? (예 : 1, 아니오 : 2) : ";
+			cin>>ballett;																						//발렛서비스에 대한 변수 ballett
+			system("cls");
+			if(ballett == 1) {gotoxy(18, 10); cout<<"차 번호 "<<Car_No<<"발렛 서비스 신청 완료. 대기중입니다.";
+							  gotoxy(22, 12); cout<<"만족하셨나요? 별점을 주세요 (1~10점) : "; cin>>r.grade;
+							  gotoxy(26, 14); cout<<"감사합니다 :) 안녕히가세요!" ;}
+			else if(ballett == 2) {gotoxy(26, 11); cout<<"감사합니다 :) 안녕히가세요!";}
+			fout1.write((char*)&c, sizeof(c));
+			_getch();
+			return;
+		}
+		else
+			fout1.write((char*)&c, sizeof(c));
+	}
+	fin1.close();
+	fout1.close();
+	remove("cust");
+	rename("temp","cust");
+
+	ofstream f1,f2;
+	f1.open("temp", ios::binary | ios::out | ios::app);
+	f2.open("detail",ios::binary | ios::out | ios::app);
+	fstream fin2("cust", ios::binary | ios::in | ios::app);
+	while(!fin2.eof())
+	{
+		fin2.read((char*)&c, sizeof(c));
+		if(!fin2.eof())
+		{
+			if(roomno!=c.Roomn)
+			{
+				f1.write((char*)&c ,sizeof(c));
+			}
+			else
+			{
+				f2.write((char*)&c ,sizeof(c));
+			}
+		}
+	}
+	fin2.close();
+	f1.close();
+	f2.close();
+	remove("cust");
+	rename("temp","cust");
+
+	_getch();
+	closegraph();
+	restorecrtmode();
+
+}
+
+void ROOMS::bookRoom(int RNO)
+{
+	ROOMS r;
+	fstream fin("rooms", ios::binary | ios::in);
+	fstream fout("temp", ios::binary | ios::out);
+	while(fin.read((char*)&r, sizeof(r)))
+	{
+		if(RNO==r.roomNo)
+		{
+			gotoxy(22,25);
+			cout<<"Room No '"<<RNO<<"' has been booked";
+			r.roomStatus=1;
+			fout.write((char*)&r, sizeof(r));
+		}
+		else
+			fout.write((char*)&r, sizeof(r));
+	}
+	fout.close();
+	fin.close();
+	remove("rooms");
+	rename("temp","rooms");
+	_getch();
+}
+void ROOMS::releaseRoom(int RNO)
+{
+	ROOMS r;
+	int NO_DAYS;
+	fstream fin("rooms", ios::binary | ios::in);
+	fstream fout("temp", ios::binary | ios::out);
+	while(fin.read((char*)&r, sizeof(r)))
+	{
+		if(RNO==r.roomNo)
+		{
+			r.roomStatus=0;
+			fout.write((char*)&r, sizeof(r));
+		}
+		else
+			fout.write((char*)&r, sizeof(r));
+	}
+	fin.close();
+	fout.close();
+	remove("rooms");
+	rename("temp","rooms");
+}
+unsigned long ROOMS::retRoomCharges(int RNO)
+{
+	ROOMS r;
+	long double AMOUNT;
+	fstream fin("rooms", ios::binary | ios::in);
+	while(fin.read((char*)&r, sizeof(r)))
+	{
+		if(RNO==r.roomNo)
+		{
+			AMOUNT=r.roomCharges;
+			break;
+		}
+	}
+	fin.close();
+	return AMOUNT;
+}
+void CUSTOMER::previous_Customer(void)
+{
+	system("cls");
+	basic();
+	CUSTOMER c;
+	char NAME[30];
+	gotoxy(32,3); cout<<"H I L L   V I E W";
+	gotoxy(5,6);cout<<"Enter customer name: ";
+	gets(NAME);
+	fstream fin("detail", ios::binary | ios::in);
+	while(fin.read((char*)&c, sizeof(c)))
+	{
+		if(strcmp(c.name,NAME)==0)
+		{
+			gotoxy (26,8);cout<<"Room Number: "<<c.Roomn;
+			gotoxy (26,9);cout<<"Customer Name : "<<c.name;
+			gotoxy (26,10);cout<<"Address: "<<c.add;
+			gotoxy (26,11);cout<<"Phone No. : "<<c.phone;
+		}
+	}
+	_getch();
+	closegraph();
+	restorecrtmode();
+}
+void enter_password()
+{
+	system("cls");
+	char pass[10],c;
+	int i =0;
+	gotoxy(25,18);cout <<"Enter the password : " ;
+	do{
+		c = _getch();
+		if(c==8) {cout<<'\b'<<' '<<'\b';i--;}
+		else if(c!=13) {cout<<'*';pass[i]=c;i++;}
+	}
+	while(c!=13);
+	pass[i]='\0';
+
+	if (strcmp(pass,"1234")==0)
+		return ;
+	gotoxy(28,20);cout <<"   WRONG PASSWORD    " ;
+	_getch() ;
+	exit(0) ;
+}
+
+
+void main()
+{
+	basic();
+
+	
+	char c;
+	
+	textcolor(GREEN);
+	void graph(void);
+
+	
+	void enter_password();
+
+	enter_password();
+	system("cls");
+	struct date d;
+	
+	do
+	{
+		system("cls");
+		graph();
+		gotoxy(32,3); cout<<"H I L L   V I E W";
+		gotoxy(5,23); cout<<"Designed and Created by";
+		gotoxy(30,24); cout <<"ARUN VENKATESH";
+		gotoxy(30,25); cout <<"ANANDA VALLIAPPAN";
+		gotoxy(30,26); cout <<"ATEETH KUMAR";
+		gotoxy (5,12);cout<<"1. Search";
+		gotoxy (5,13);cout<<"2. Check in";
+		gotoxy (5,14);cout<<"3. Check out";
+		gotoxy (5,15);cout<<"4. Room status";
+		gotoxy (5,16);cout<<"5. Earnings";
+		gotoxy (5,17);cout<<"6. Previous Customers";
+		gotoxy (5,18);cout<<"0. Exit";
+		gotoxy(30,21);	cout<<"Enter choice : ";
+		do{c=_getch();
+		if(c>=48 &&c<=54) {cout<<c; delay(500);}
+		}while(c<48 || c>54);
+		switch(c)
+		{ case '0':choice =0;break;
+		case '1' : choice =1;break;
+		case '2':choice=2;break;
+		case '3':choice =3;break;
+		case '4':choice=4;break;
+		case '5':choice=5;break;
+		case '6':choice=6;break;
+		case '7':choice=7;break;
+		}
+		closegraph();
+		restorecrtmode();
+		switch(choice)
+		{
+		case 1:	{
+			int choice;
+			char ch;
+			do
+			{
+				system("cls");
+				graph();
+				gotoxy(32,3);cout<<"H I L L   V I E W";
+				gotoxy(32, 5);cout<<"S E A R C H\n\n";
+				gotoxy (5,12);cout<<"1. To search by NAME";
+				gotoxy (5,13);cout<<"2. To search by ROOM NO.";
+				gotoxy (5,14);cout<<"0. Exit";
+				gotoxy(30,21);cout<<"Enter choice : ";
+				do{
+					ch=_getch();
+					if(ch>=48 &&ch<=50) {cout<<ch;delay(500);}
+				}
+				while(ch<48 || ch>50);
+				switch(ch)
+				{ 
+				case '0':choice =0;break;
+				case '1' : choice =1;break;
+				case '2':choice=2;break;
+				}
+
+				closegraph();
+				restorecrtmode();
+				switch(choice)
+				{
+				case 1:	{
+					CUSTOMER c;
+					c.searchCust();
+					break;
+						}
+				case 2:	{
+					CUSTOMER c;
+					c.searchRoomNo();
+					break;
+						}
+				}
+			}while(choice!=0);
+			break;
+				}
+		case 2:	{
+			CUSTOMER c;
+			c.check_in();
+			break;
+				}
+
+		case 3:	{
+			CUSTOMER c;
+			c.check_out();
+			break;
+				}
+		case 4:	{
+			ROOMS r;
+			r.status();
+			break;
+				}
+		case 5:	{
+			CUSTOMER c;
+			c.reports();
+			break;
+				}
+		case 6: {
+			CUSTOMER c;
+			c.previous_Customer();
+			break;
+				}
+
+		}
+	}while(choice!=0);
+	
+}
